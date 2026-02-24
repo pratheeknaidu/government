@@ -55,9 +55,16 @@ Issue **executive orders** — your daily commitments. Track completion with che
 | **Departments** | Health, Finance, Learning, Career, Relationships, Wellbeing |
 | **Activity Feed** | Timeline of all governance actions |
 | **Dark Theme** | Premium dark UI with gold accents |
-| **Local Storage** | All data persists in browser — no account needed |
+| **Cloud Sync** | Real-time Firebase Firestore syncing across devices |
+| **Security** | Firebase Authentication (Google Sign-In) to protect your Republic |
 
 ---
+
+## 🌐 Live Demo
+
+The app is fully deployed and accessible from any device.
+
+**[Launch MyRepublic](https://my-republic-app.vercel.app)**
 
 ## 🚀 Getting Started
 
@@ -68,6 +75,12 @@ cd government
 
 # Install dependencies
 npm install
+
+# Setup Firebase environment variables
+# Create a .env.local file with your Firebase config:
+# VITE_FIREBASE_API_KEY=...
+# VITE_FIREBASE_AUTH_DOMAIN=...
+# VITE_FIREBASE_PROJECT_ID=...
 
 # Run the dev server
 npm run dev
@@ -83,7 +96,8 @@ Open [http://localhost:5173](http://localhost:5173) and found your republic.
 - **React Router 7** — Client-side routing
 - **Vite** — Build tooling
 - **Vanilla CSS** — Custom design system (dark theme, glassmorphism, CSS variables)
-- **localStorage** — Data persistence
+- **Firebase Auth** — Google Sign-In authentication
+- **Firebase Firestore** — Real-time cloud database for cross-device syncing
 
 ---
 
