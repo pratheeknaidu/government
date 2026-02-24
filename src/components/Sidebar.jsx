@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { auth } from '../firebase';
 
 const navItems = [
     { to: '/', icon: '📊', label: 'Dashboard' },
@@ -8,7 +9,7 @@ const navItems = [
     { to: '/executive', icon: '🎖️', label: 'Executive' },
 ];
 
-export default function Sidebar({ republicName, motto, isOpen, onClose }) {
+export default function Sidebar({ user, republicName, motto, isOpen, onClose }) {
     return (
         <>
             {isOpen && <div className="sidebar-backdrop" onClick={onClose} />}
@@ -44,10 +45,31 @@ export default function Sidebar({ republicName, motto, isOpen, onClose }) {
                     ))}
                 </nav>
 
-                <div className="sidebar-footer">
-                    <div className="sidebar-footer-text">
-                        Govern yourself wisely
-                    </div>
+                <div className="sidebar-footer" style={{ padding: '1rem', borderTop: '1px solid var(--border)' }}>
+                    {user && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                            {user.photoURL && (
+                                <img
+                                    src={user.photoURL}
+                                    alt="Profile"
+                                    style={{ width: '32px', height: '32px', borderRadius: '50%' }}
+                                />
+                            )}
+                            <div style={{ flex: 1, overflow: 'hidden' }}>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                                    {user.displayName}
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>President</div>
+                            </div>
+                        </div>
+                    )}
+                    <button
+                        className="btn btn-ghost"
+                        onClick={() => auth.signOut()}
+                        style={{ width: '100%', justifyContent: 'center', padding: '0.5rem', color: 'var(--text-secondary)' }}
+                    >
+                        Sign Out
+                    </button>
                 </div>
             </aside>
         </>

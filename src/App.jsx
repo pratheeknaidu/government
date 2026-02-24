@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from './firebase';
 import { useRepublic } from './store';
 import { useToast } from './components/Toast';
 import Sidebar from './components/Sidebar';
+import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Constitution from './pages/Constitution';
 import Legislature from './pages/Legislature';
@@ -11,9 +14,23 @@ import Executive from './pages/Executive';
 import Setup from './pages/Setup';
 
 export default function App() {
+  const [user, loading] = useAuthState(auth);
   const republic = useRepublic();
   const { showToast, ToastContainer } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  if (loading || republic.loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', alignItems: 'center', color: 'var(--gold-primary)' }}>
+        <div className="sidebar-seal" style={{ fontSize: '3rem', animation: 'pulse 2s infinite' }}>🏛️</div>
+        <div>Loading your republic...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Auth />;
+  }
 
   if (!republic.data.republic.setupComplete) {
     return <Setup onSetup={republic.setupRepublic} />;
@@ -30,6 +47,7 @@ export default function App() {
         </button>
 
         <Sidebar
+          user={user}
           republicName={republic.data.republic.name}
           motto={republic.data.republic.motto}
           isOpen={sidebarOpen}

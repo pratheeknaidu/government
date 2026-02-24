@@ -1,8 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth, db } from './firebase';
 import { generateNumber } from './utils';
 
-const STORAGE_KEY = 'myrepublic_data';
-
+// We no longer rely on localStorage directly for the active user session,
+// but we keep the default structure identically.
 const defaultData = {
   republic: {
     name: '',
@@ -29,50 +32,17 @@ const defaultData = {
   activity: [],
 };
 
-/**
- * Deep merge loaded data with defaults so that nested keys
- * added in newer versions are always present.
- */
-function loadData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return {
-        republic: { ...defaultData.republic, ...parsed.republic },
-        constitution: { ...defaultData.constitution, ...parsed.constitution },
-        legislature: { ...defaultData.legislature, ...parsed.legislature },
-        judiciary: { ...defaultData.judiciary, ...parsed.judiciary },
-        executive: { ...defaultData.executive, ...parsed.executive },
-        activity: parsed.activity ?? defaultData.activity,
-      };
-    }
-  } catch (e) {
-    console.error('Failed to load data:', e);
-  }
-  return { ...defaultData };
-}
-
-function saveData(data) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    console.error('Failed to save data:', e);
-  }
-}
-
-// ===== Helper: integer to Roman numeral =====
-export function toRoman(num) {
-  const vals = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
-  const syms = ['M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'];
-  let result = '';
-  for (let i = 0; i < vals.length; i++) {
-    while (num >= vals[i]) {
-      result += syms[i];
-      num -= vals[i];
-    }
-  }
-  return result;
+// Deep merge helper
+function deepMerge(defaults, loaded) {
+  if (!loaded) return { ...defaults };
+  return {
+    republic: { ...defaults.republic, ...(loaded.republic || {}) },
+    constitution: { ...defaults.constitution, ...(loaded.constitution || {}) },
+    legislature: { ...defaults.legislature, ...(loaded.legislature || {}) },
+    judiciary: { ...defaults.judiciary, ...(loaded.judiciary || {}) },
+    executive: { ...defaults.executive, ...(loaded.executive || {}) },
+    activity: loaded.activity || defaults.activity,
+  };
 }
 
 // ===== Helper: create an activity entry =====
@@ -87,18 +57,65 @@ function makeActivity(type, icon, text) {
 }
 
 export function useRepublic() {
-  const [data, setData] = useState(loadData);
+  const [user] = useAuthState(auth);
+  const [data, setData] = useState(defaultData);
+  const [loading, setLoading] = useState(true);
 
+  // Used for throttling saves to Firestore
+  const debounceTimer = useRef(null);
+
+  // 1. Initial Load from Firestore
   useEffect(() => {
-    saveData(data);
-  }, [data]);
+    if (!user) {
+      setData(defaultData);
+      setLoading(false);
+      return;
+    }
 
+    let isMounted = true;
+    const loadFromCloud = async () => {
+      try {
+        const docRef = doc(db, 'government_users', user.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists() && isMounted) {
+          setData(deepMerge(defaultData, docSnap.data()));
+        }
+      } catch (err) {
+        console.error("Failed to load republic from cloud:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    loadFromCloud();
+    return () => { isMounted = false; };
+  }, [user]);
+
+  // 2. The core update loop. Any time we change state, we apply it immediately
+  // to React state, then debounce-save it to Firestore.
   const update = useCallback((updater) => {
     setData((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
-      return { ...next };
+      const newState = { ...next };
+
+      // Debounce saving to Firestore to avoid blasting it with writes
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+      debounceTimer.current = setTimeout(async () => {
+        if (user) {
+          try {
+            const docRef = doc(db, 'government_users', user.uid);
+            await setDoc(docRef, newState);
+          } catch (err) {
+            console.error("Failed to sync republic to cloud:", err);
+          }
+        }
+      }, 1000); // 1-second debounce
+
+      return newState;
     });
-  }, []);
+  }, [user]);
 
   // ===== REPUBLIC =====
   const setupRepublic = useCallback((name, motto) => {
@@ -149,7 +166,7 @@ export function useRepublic() {
           ...d.constitution,
           articles: [...d.constitution.articles, article],
         },
-        activity: [makeActivity('constitution', '🏛️', `Ratified Article ${toRoman(number)}: ${title}`), ...d.activity].slice(0, 50),
+        activity: [makeActivity('constitution', '🏛️', `Ratified Article ${number}: ${title}`), ...d.activity].slice(0, 50),
       };
     });
   }, [update]);
@@ -438,6 +455,7 @@ export function useRepublic() {
 
   return {
     data,
+    loading,
     // Republic
     setupRepublic,
     // Constitution
