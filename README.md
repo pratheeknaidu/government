@@ -1,16 +1,115 @@
-# React + Vite
+# 🏛️ MyRepublic — Personal Life Governance
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> *"Govern yourself wisely."*
 
-Currently, two official plugins are available:
+MyRepublic transforms personal development into an act of self-governance. Model your life as a republic — write a constitution, pass laws, judge yourself when you break them, and issue executive orders as daily commitments. Everything is tracked with a health score so you can see how well you're governing.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 📸 Screenshots
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Dashboard
+Your republic's "state of the union." A health score gauge (0–100) scores you across law adherence, order completion, constitutional coverage, and more. Stat cards show active laws, pending cases, today's orders, and your streak.
 
-## Expanding the ESLint configuration
+![Dashboard](docs/dashboard.png)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Constitution
+Write a preamble — your personal mission statement. Then ratify articles: the core principles you live by. Amend them as you evolve.
+
+![Constitution](docs/constitution.png)
+
+### Legislature
+Propose bills (personal rules), advance them through a deliberation process, and enact them into law. Repeal laws that no longer serve you.
+
+![Legislature](docs/legislature.png)
+
+### Parliament Session
+Before enacting a bill, open a **Parliament Session** to deliberate. Add pros and cons, watch the score bar shift, write a conclusion, then vote to enact or reject. You can also **amend** the bill's text mid-session.
+
+`Draft → Proposed → Parliament Session → Enacted / Rejected`
+
+![Parliament Session](docs/parliament-session.png)
+
+### Judiciary
+When you break your own rules, **file a case** against yourself. Issue verdicts (Guilty / Not Guilty / Pardoned), assign sentences (corrective actions), and mark them as served.
+
+![Judiciary](docs/judiciary.png)
+
+### Executive
+Issue **executive orders** — your daily commitments. Track completion with checkbox-style interactions, monitor your streak, and see your 30-day completion rate.
+
+![Executive](docs/executive.png)
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---------|-------------|
+| **Health Score** | Weighted score (0–100) across 5 pillars of governance |
+| **Constitution** | Preamble + Articles with amendment history |
+| **Legislature** | Full bill lifecycle with Parliament Session deliberation |
+| **Parliament Session** | Pros/cons debate, score bar, conclusion, amend & vote |
+| **Judiciary** | File cases, issue verdicts, track sentences |
+| **Executive Orders** | Daily commitments with streaks and completion tracking |
+| **Departments** | Health, Finance, Learning, Career, Relationships, Wellbeing |
+| **Activity Feed** | Timeline of all governance actions |
+| **Dark Theme** | Premium dark UI with gold accents |
+| **Local Storage** | All data persists in browser — no account needed |
+
+---
+
+## 🚀 Getting Started
+
+```bash
+# Clone the repo
+git clone https://github.com/pratheeknaidu/government.git
+cd government
+
+# Install dependencies
+npm install
+
+# Run the dev server
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) and found your republic.
+
+---
+
+## 🛠️ Tech Stack
+
+- **React 19** — UI framework
+- **React Router 7** — Client-side routing
+- **Vite** — Build tooling
+- **Vanilla CSS** — Custom design system (dark theme, glassmorphism, CSS variables)
+- **localStorage** — Data persistence
+
+---
+
+## 📁 Project Structure
+
+```
+src/
+├── App.jsx                 # Root layout with routing
+├── store.js                # State management (useRepublic hook)
+├── utils.js                # Helpers (dates, health score, departments)
+├── index.css               # Full design system
+├── components/
+│   ├── Modal.jsx           # Accessible modal with Escape key support
+│   ├── Sidebar.jsx         # Navigation sidebar
+│   └── Toast.jsx           # Toast notifications
+└── pages/
+    ├── Dashboard.jsx       # Health gauge + activity feed
+    ├── Constitution.jsx    # Preamble + articles
+    ├── Legislature.jsx     # Bills + Parliament Session
+    ├── Judiciary.jsx       # Cases + verdicts
+    ├── Executive.jsx       # Orders + streaks
+    └── Setup.jsx           # Onboarding flow
+```
+
+---
+
+## 📄 License
+
+MIT
