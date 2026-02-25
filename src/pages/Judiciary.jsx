@@ -19,6 +19,11 @@ export default function Judiciary({ republic, showToast }) {
     const [verdictNotes, setVerdictNotes] = useState('');
     const [sentence, setSentence] = useState('');
 
+    // AI Judge
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiError, setAiError] = useState('');
+    const [aiApplied, setAiApplied] = useState(false);
+
     const pendingCases = cases.filter((c) => c.verdict === 'pending');
     const resolvedCases = cases.filter((c) => c.verdict !== 'pending');
     const enactedLaws = data.legislature.bills.filter((b) => b.status === 'enacted');
@@ -51,6 +56,58 @@ export default function Judiciary({ republic, showToast }) {
         setVerdict('');
         setVerdictNotes('');
         setSentence('');
+        setAiLoading(false);
+        setAiError('');
+        setAiApplied(false);
+    };
+
+    const askTheJudge = async () => {
+        const cs = cases.find((c) => c.id === judgingId);
+        if (!cs) return;
+
+        setAiLoading(true);
+        setAiError('');
+        setAiApplied(false);
+
+        // Gather context
+        const activeArticles = data.constitution.articles.filter((a) => a.status === 'active');
+        const constitutionText = activeArticles.length > 0
+            ? activeArticles.map((a) => `Article ${a.number}: ${a.title} — ${a.text}`).join('\n')
+            : '';
+
+        let relatedLaw = '';
+        if (cs.relatedLawId) {
+            const law = data.legislature.bills.find((b) => b.id === cs.relatedLawId);
+            if (law) relatedLaw = `${law.number}: ${law.title}`;
+        }
+
+        try {
+            const res = await fetch('/api/judge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    caseTitle: cs.title,
+                    caseDescription: cs.description || '',
+                    relatedLaw,
+                    constitution: constitutionText,
+                }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'Failed to consult the Judge');
+            }
+
+            const result = await res.json();
+            setVerdict(result.verdict);
+            setVerdictNotes(result.notes);
+            setSentence(result.sentence);
+            setAiApplied(true);
+        } catch (err) {
+            setAiError(err.message);
+        } finally {
+            setAiLoading(false);
+        }
     };
 
     const getLawTitle = (lawId) => {
@@ -288,6 +345,31 @@ export default function Judiciary({ republic, showToast }) {
                 onClose={() => setJudgingId(null)}
             >
                 <form onSubmit={handleVerdict}>
+                    {/* AI Judge */}
+                    <div style={{ marginBottom: 'var(--space-md)', textAlign: 'center' }}>
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            disabled={aiLoading}
+                            onClick={askTheJudge}
+                            style={{ width: '100%' }}
+                        >
+                            {aiLoading ? 'Consulting the Judge...' : 'Ask the Judge'}
+                        </button>
+                        {aiError && (
+                            <div style={{ color: 'var(--guilty)', fontSize: '0.85rem', marginTop: 'var(--space-sm)' }}>
+                                {aiError}
+                            </div>
+                        )}
+                        {aiApplied && (
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: 'var(--space-sm)', fontStyle: 'italic' }}>
+                                AI recommendation applied below. Review and edit before issuing.
+                            </div>
+                        )}
+                    </div>
+
+                    <hr className="divider" />
+
                     <div className="form-group">
                         <label className="form-label">Verdict</label>
                         <div className="verdict-selector">
