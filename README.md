@@ -64,7 +64,7 @@ Issue **executive orders** — your daily commitments. Track completion with che
 
 The app is fully deployed and accessible from any device.
 
-**[Launch MyRepublic](https://my-republic-app.vercel.app)**
+**[Launch MyRepublic](https://government-lilac.vercel.app)**
 
 ## 🚀 Getting Started
 
